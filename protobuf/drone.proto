@@ -1,0 +1,24 @@
+syntax = "proto2";
+
+message Motors {
+  required uint32 motor_DL = 1;
+  required uint32 motor_DR = 2;
+  required uint32 motor_R  = 3;
+  required uint32 motor_L  = 4;
+};
+
+message DroneState {
+  required float roll   = 1;
+  required float pitch  = 2;
+  required float yaw    = 3;
+
+  required int32 acc_x  = 4;
+  required int32 acc_y  = 5;
+  required int32 acc_z  = 6;
+  required int32 gyro_x = 7;
+  required int32 gyro_y = 8;
+  required int32 gyro_z = 9;
+  required int32 mag_x  = 10;
+  required int32 mag_y  = 11;
+  required int32 mag_z  = 12;
+};
