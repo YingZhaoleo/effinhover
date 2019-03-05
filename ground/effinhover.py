@@ -116,6 +116,7 @@ class Controller(object):
 		read = csv.reader(f)
 		prbs = []
 		for row in read:
+			print(row)	# Just to test what is stored in row
 			prbs.append(row[0])
 		f.close()
 		prbs = iter(prbs)
@@ -128,7 +129,8 @@ class Controller(object):
 
 		while True:
 			# Sets the motor values
-			self.control_loop(estimator.state, int(next(prbs)))
+			#self.control_loop(estimator.state, int(next(prbs)))	# This generated errors so I replaced it with line below
+			self.control_loop(estimator.state, [1000,1000,1000,1000])	# Looks like the prbs signal is never applied in method control_loop
 
 			if self.armed is False:
 				self._off()

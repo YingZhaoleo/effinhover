@@ -24,8 +24,8 @@
 /*
  * Enter network name and wifi password here
  */
-const char * ssid = "";
-const char * password = "";
+const char * ssid = "hovercraft";
+const char * password = "1234abcd";
 
 const int udpPort = 3333;
 
