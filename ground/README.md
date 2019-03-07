@@ -23,7 +23,7 @@ In order to run the code of the ground station the following libraries are requi
 
 - Create a WiFi with the name *hovercraft* and the password *1234abcd*. Most conveniently this can be done on your smartphone using a mobile hotspot. 
 - Connect your laptop to this WiFi.
-- Open a terminal in the folder *effinhover/hover_arduino* and execute the python script with
+- Open a terminal in the folder *effinhover/ground* and execute the python script with
     ```
     python effinhover.py
     ```
