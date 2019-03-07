@@ -1,6 +1,6 @@
 # Task list
 
-- [ ] Communicate with hovercraft using Python interface
+- [x] Communicate with hovercraft using Python interface
 - [ ] Wrap Python code to Matlab (optional)
 - [ ] Write simulator of surface ship model in Matlab using some parameters (m, I)
 - [ ] Write offline parameter identification (using fmincon) in Matlab and validate with simulation data
