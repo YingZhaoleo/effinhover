@@ -18,11 +18,21 @@ function dXdt = dynamics(t, X)
     Yv = 0.35;      % Sway damping
     Nr = 0.5E-2;    % Yaw damping
 
-    l = 0.02;      % Lateral offset of thruster from center line
+    l = 0.025;      % Lateral offset of thruster from center line
 
     % Funky input
-    input = [max(0,square(t*2, 20)), max(0,square(t*2 + pi, 20))]';
-
+    %input = [max(0,square(t*2, 20)), max(0,square(t*2 + pi, 20))]';
+    if t < 1
+        input = [0,0]';
+    elseif (t > 1) && (t < 15)
+        input = [0.2,0]';
+    elseif (t > 0) && (t < 30)
+        input = [0, 0.2]';
+    else
+        input = [0,0]';
+    end
+    
+        
     % Assumed origin of body frame is at center of gravity
 
     % Mass matrix
@@ -35,8 +45,8 @@ function dXdt = dynamics(t, X)
          m * nu(2), - m * nu(1), 0];
 
     % Damping matrix
-    D = - diag([Xu, Yv, Nr]);
-
+    D = diag([Xu, Yv, Nr]);
+    
     % Input matrix
     B = [1, 1;
          0, 0;
@@ -44,13 +54,14 @@ function dXdt = dynamics(t, X)
      
     % Rotation matrix from body to ground frame
     R_z_psi = [cos(eta(3)), -sin(eta(3)), 0;
-              sin(eta(3)), cos(eta(3)), 0;
-                    0     ,       0    , 1];
+               sin(eta(3)),  cos(eta(3)), 0;
+                    0     ,       0     , 1];
 
     dXdt = zeros(6, 1);
 
     % Temporal derivative of x, y, psi
     dXdt(1:3) = R_z_psi * nu;
-    dXdt(4:6) = - M\(- B * input - C * nu - D * nu);
+    % Temporal derivative of u, v, r
+    dXdt(4:6) = M\(B * input - C * nu - D * nu);
 
 end
