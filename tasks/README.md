@@ -14,3 +14,6 @@
 - [ ] Look at parameter ID with Extended KF paper
 
 ## Week 4
+
+
+## Random Findings
