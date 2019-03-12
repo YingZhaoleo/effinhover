@@ -7,5 +7,13 @@
 - [ ] If identification validated go to camera room to test on real system
 
 ## Week 3
+- [ ] Use Euler method and check if discretisation is good enough (K)
+- [ ] Parameter ID local frame with velocity (M)
+- [ ] Derive the RK4 by hand (Both)
+- [ ] Look at parameter ID with Gaussian Process paper (directly working with ODE)
+- [ ] Look at parameter ID with Extended KF paper
 
 ## Week 4
+
+
+## Random Findings
