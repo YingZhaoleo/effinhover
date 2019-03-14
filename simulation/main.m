@@ -5,8 +5,8 @@ clear
 %close all
 
 % Simulation settings
-h = 0.005;            % Sample time
-tmax = 25;          % Simulation time   
+h = 0.005;           % Sample time
+tmax = 25;           % Simulation time   
 t = 0 :h:tmax;       % Sample times
 
 % Initial state vector
@@ -29,12 +29,13 @@ for k = 1:length(t) - 1
   rk4.X(:,k+1) = rk4.f_discrete(rk4.X(:,k), U(:,k));
 end
 
-% Simulate using Euler -> write Euler(X, U, h, f) function similar to RK4
-% euler.name = 'RK4';
-% euler.f_discrete = @(X,U) Euler(X, U, h, @dynamics);
-% euler.X = X0;
+% % Simulate using EM (Euler Method)
+% em.name = 'Euler Method';
+% % RK discrete system = RK1 function with function handle (@dynamics) of dynamics function
+% em.f_discrete = @(X,U) EM(X, U, h, @dynamics);
+% em.X = X0;
 % for k = 1:length(t) - 1
-%   euler.X(:,k+1) = euler.f_discrete(euler.X(:,k), U(:,k));
+%   em.X(:,k+1) = em.f_discrete(em.X(:,k), U(:,k));
 % end
 
 visualize(t, rk4.X, 100)
@@ -53,4 +54,3 @@ save('../identification/dataID.mat', 'dataId')
 % plot(X2(:,1), X2(:,2), 'k--')
 % plot(X(1,:), X(2,:), 'r--')
 % legend('ode45','ode23','rk4')
-
