@@ -22,6 +22,8 @@ Xu = 0.3;       % Surge damping
 Yv = 0.35;      % Sway damping
 Nr = 0.5E-2;    % Yaw damping
 
+K = 0.1;          % Motor signal to thrust conversion coefficient
+
 l = 0.025;      % Lateral offset of thruster from center line
 
 % Time dependent input (used in previous version)
@@ -64,6 +66,6 @@ dXdt = zeros(6, 1);
 % Temporal derivative of x, y, psi
 dXdt(1:3) = R_z_psi * nu;
 % Temporal derivative of u, v, r
-dXdt(4:6) = M\(B * U - C * nu - D * nu);
+dXdt(4:6) = M\(B * K * U - C * nu - D * nu);
 
 end

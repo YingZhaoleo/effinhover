@@ -6,16 +6,14 @@ clear
 
 % Simulation settings
 h = 0.005;            % Sample time
-tmax = 40;          % Simulation time   
+tmax = 25;          % Simulation time   
 t = 0 :h:tmax;       % Sample times
 
 % Initial state vector
-X0 = [0, 0, 0, 0, 0, deg2rad(20)]';
+X0 = [0, 0, 0, 0, 0, 0]';
 
 % Input vector
-U = [0.2 * ones(1,length(t)); zeros(1, length(t))];
-n = round(length(t)/2);
-U = [0.2 * ones(1, n), zeros(1, n); zeros(1, n), 0.2 * ones(1, n)];
+U = 2*max(idinput([length(t), 2], 'prbs')', 0) + [0.2; 0]*ones(1, length(t));
 
 % Simulate trajectory using ode45 (does not work with the current
 % implementation of the dynamic function)
@@ -40,6 +38,14 @@ end
 % end
 
 visualize(t, rk4.X, 100)
+
+dataId.name = 'Identification data';
+dataId.nu = rk4.X(4:6, :);
+dataId.U = U;
+dataId.h = h;
+dataId.tmax = tmax;
+dataId.nu0 = X0(4:6);
+save('../identification/dataID.mat', 'dataId')
 
 %figure
 % hold on
