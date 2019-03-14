@@ -31,7 +31,6 @@ end
 
 % % Simulate using EM (Euler Method)
 % em.name = 'Euler Method';
-% % RK discrete system = RK1 function with function handle (@dynamics) of dynamics function
 % em.f_discrete = @(X,U) EM(X, U, h, @dynamics);
 % em.X = X0;
 % for k = 1:length(t) - 1
