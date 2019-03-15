@@ -1,0 +1,191 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage[a4paper]{geometry}
+\usepackage{sectsty}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\sectionfont{\fontsize{14}{15}\selectfont}
+\subsectionfont{\fontsize{13}{15}\selectfont}
+\setlength\parindent{0pt}
+
+\title{Hovercraft Simulation Model Handbook}
+\author{Karim Abdelaziz}
+
+\begin{document}
+
+\input{coverpage.tex}
+
+\section{Introduction}
+
+The hovercraft’s mathematical simulation model is based on the surface ship model found in “\textit{Guidance and Control of Ocean Vehicles}” by Thor I. Fossen which follows the standard notation conventions for maritime vehicles. It allows expressing the hovercraft’s position as well as its linear and angular velocities with the provided left and right thrust as inputs. Therefore, a \textsc{Matlab} function was generated in order to simulate the behaviour of a miniature hovercraft when subjected to input thrust, which would allow later on for the identification of the real -life hovercraft and its control. The following document aims at explaining and instructing its reader on the hovercraft's dynamic model as well as using the\textsc{Matlab} function in order to obtain meaningful results. First, the dynamic and mathematical equations behind the model as well as the assumptions will be described, a guide for using the \textsc{Matlab} simulation code and functions will be then elaborated.\\
+
+
+\section{Hovercraft Mathematical Model}
+
+The model takes the position using the ground frame, whilst the linear and angular velocities are taken using the body frame (using the hovercraft’s centre of mass as the origin), both of them use the \(xy\) reference plane with the z axis being normal to it. Hence, the model has 3 degrees of freedom. Two purely translational motions can be identified: Surge (translation in the \(x\) direction) and Sway (translation in the \(y\) direction). Whilst one rotational motion is found: Yaw (rotation around the \(z\) axis). Pitch and roll are not considered as the hovercraft is operated on the ground and not on a soft surface with a non-uniform topology. Two vectors associated with the position and velocity emerge, being \(\eta=[x,y,\psi]^T\) and \(\nu =[u,v,r]^T\) respectively.
+
+\begin{figure}[h] % Figure will be changed
+    \centering
+    \includegraphics[width = 7cm]{img/boatmodel.png} 
+    \caption{Typical maritime boat model}
+\end{figure}
+
+
+Both vectors were grouped into one state vector, \(X\), to simplify access to the states during simulations.
+
+\begin{equation}
+X = \begin{bmatrix} \eta\\ \nu\\ \end{bmatrix} = 
+    \begin{bmatrix} x\\ y\\ \psi\\ u\\ v\\ r\\ \end{bmatrix}
+\end{equation}
+
+Where x and y are the hovercraft’s position in the x and y axes respectively, with ψ the angle (in radians) of the hovercraft’s orientation about the z axis.
+Whilst u and v are the hovercraft’s linear velocities in the x (“Surge”), and y axis (“Sway") respectively. With r the hovercraft’s yaw rate about the z axis (angular velocity in rad/s).\\
+
+The model assumes all states can be controlled using the left and right thrusters, downward facing thrusters are assumed to be providing the same amount of lift and independent from the described dynamics, hence, altitude control in not the concern of this model.\\
+
+The position states can be directly described using the rotation matrix from the body to ground frame, \(R_z (\psi)\), which links the hovercraft’s linear position to the yaw angle. The rotation matrix can be derived using basic geometry.
+
+\begin{equation}
+    \begin{bmatrix} 
+        \dot{x}\\ \dot{y}\\ \dot{\psi} 
+    \end{bmatrix} 
+    =
+    R_z(\psi) 
+    \begin{bmatrix} 
+        x\\ y\\ \psi 
+    \end{bmatrix} 
+    =
+    \begin{bmatrix} 
+        cos(\psi) & -sin(\psi) & 0\\
+        sin(\psi) & cos(\psi)  & 0 \\
+        0         &     0      & 1 
+    \end{bmatrix}
+    \begin{bmatrix}
+        x\\ y\\ \psi 
+    \end{bmatrix}
+\end{equation}
+
+The hovercraft’s motion dynamics can be expressed in a generalized form which can be derived from the basic laws of mechanics.
+
+\begin{equation}
+    M\dot{\nu} + C(\dot{\nu})\nu + D\nu = Bku
+\end{equation}
+
+Where \(M\) is the mass and inertia matrix, \(C\) the Coriolis effects matrix, \(D\) the damping matrix, \(B\) the control matrix, with \(k\) a motor to thrust coefficient and u the control vector. It must be noted that the \(M\) and \(D\) matrix are both symmetrical.\\
+
+The \(M\) matrix is expressed as
+
+\begin{equation}
+    M =
+    \begin{bmatrix}
+        m    & I_{xy} & I_{xz}\\
+        I_{yx} &   m  & I_{yz}\\
+        I_{zx} & I_{zy} & I_z
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        m & 0 & 0\\
+        0 & m & 0\\
+        0 & 0 & I_z
+    \end{bmatrix}
+\end{equation}
+
+The terms \(I_{xy},I_{xz},I_{yx},I_{yz},I_{zx},I_{zy}\) have been set to zero as it is assumed that the hovercraft has a homogeneous mass distribution, and symmetry in the \(xz\) plane\\
+
+The \(C\) matrix combines all Coriolis and centrifugal effects:
+
+\begin{equation}
+    C =
+    \begin{bmatrix}
+    0  & 0   & -mv\\
+    0  & 0   &  mu\\
+    mv & -mu & 0
+    \end{bmatrix}
+\end{equation}
+
+Whilst the \(D\) matrix in this case is diagonal as the only damping forces considered are the surge, sway and yaw damping represented by the terms \(X_u\), \(Y_v\) and \(N_r\) respectively.
+
+\begin{equation}
+    D =
+    \begin{bmatrix}
+        X_u &  0  & 0\\
+        0   & Y_v & 0\\
+        0   &  0  & N_r
+    \end{bmatrix}
+\end{equation}
+
+Finally, due to having two thrusters (fans) on the hovercraft positioned symmetrically about the \(xz\) plane with a distance \(l\) between them and the hovercraft's centre line , the thrust force generated by one thruster applies a torque with a lever arm of length \(l\) and a magnitude \(lu\), in addition to a forward thrust of magnitude u. The \(B\) matrix can therefore be obtained.
+% Possibly add figure to explain
+
+\begin{equation}
+    B =
+    \begin{bmatrix}
+        1 & 1\\
+        0 & 0\\
+        l & -l
+    \end{bmatrix}
+\end{equation}
+
+The generalised equation is then rearranged in state-space form to obtain the temporal derivatives (state-updates) of the linear and angular velocities.
+
+\begin{equation}
+    \begin{bmatrix}
+        \dot{u}\\
+        \dot{v}\\
+        \dot{r}
+    \end{bmatrix}
+    = M^{-1} [Bku - C\nu - D\nu]
+\end{equation}\\
+
+\section{MATLAB Script User Guide}
+
+% Change dynamics.m font later to courier
+The following section describes the use of the dynamics.m
+ \textsc{Matlab} code allowing to simulate the previously discussed mathematical model.
+
+% Change third column font to courier
+\makebox[\textwidth]{
+\begin{center}
+ \begin{tabular}{c c c}
+ \hline\hline
+ \textbf{Parameter} & \textbf{Mathematical Symbol} & dynamics.m \textbf{Symbol}\\ [0.5ex] 
+ \hline\hline
+ Generalised state vector & \(X\) & X \\ 
+ \hline
+ Position/orientation state vector & \(\eta\) & eta \\
+ \hline
+ Linear/angular velocity state vector & \(\nu\) & nu \\
+ \hline
+ Input vector & \(u\) & U \\
+ \hline
+ Hovercraft mass & \(m\) & m \\
+ \hline
+ Hovercraft moment of inertia about \(z\) axis & \(I_z\) & Iz\\
+ \hline
+ Surge damping & \(X_u\) & Xu \\
+ \hline
+ Sway damping & \(Y_v\) & Yv \\
+ \hline
+ Yaw damping & \(N_r\) & Nr \\
+ \hline
+ Motor signal to thrust coefficient & \(k\) & K \\
+ \hline
+ Thruster offset from centre line & \(l\) & l \\
+ \hline
+ Mass/inertia matrix & \(M\) & M \\
+ \hline
+ Coriolis effects matrix & \(C\) & C \\
+ \hline
+ Damping matrix & \(D\) & D \\
+ \hline
+ Input matrix & \(u\) & U \\
+ \hline
+ Rotation matrix & \(R_z(\psi)\) & R\_z\_\psi \\
+%[0.5ex] 
+ \hline\hline
+\end{tabular}
+\end{center}
+}
+
+\end{document}
