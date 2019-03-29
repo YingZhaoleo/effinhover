@@ -72,4 +72,3 @@ stairs(t, Uq(:,1)', '*--r', 'LineWidt', 1)
 % plot(X2(:,1), X2(:,2), 'k--')
 % plot(X(1,:), X(2,:), 'r--')
 % legend('ode45','ode23','rk4')
-
