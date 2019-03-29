@@ -13,5 +13,4 @@ k3 = f(X + h/2*k2, U);
 k4 = f(X + h * k3, U); 
 
 x_next = X + h*(k1/6 + k2/3 + k3/3 + k4/6);
-
 end

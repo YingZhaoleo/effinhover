@@ -2,6 +2,9 @@
 %  main program for fitting parameters of ODE hovercraft model to data
 %  objective function is defined in objFun.m
 %  dynamic model is defined in dynamicsId.m
+%
+%  To obtain new identification data run the main.m function in
+%  effinhover/identification and specify any input in the file
 
 clear
 close all
@@ -40,5 +43,5 @@ disp('Real parameters theta:');
 disp([K, Iz, Xu, Yv, Nr]);
 disp('Estimated parameters theta:');
 disp(thetamin)
-disp('Smallest value of the error S:');
+disp('Minimum of objective:');
 disp(objmin)
