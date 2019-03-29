@@ -1,11 +1,14 @@
+#!/usr/bin/env python
+
 import socket
 import sys
+import math
 import rospy
 import drone_pb2 as drone
 
 # Get inspired by : https://github.com/germain-hug/Autonomous-RC-Car/blob/master/scripts/manual_driver.py
 
-def setup():
+def setupUDP():
 	ground = socket.socket(socket.AF_INET, # Internet
                      socket.SOCK_DGRAM) # UDP
 
@@ -22,30 +25,49 @@ def setup():
 			return ground, hover_address
     
   
+def setupNode():
+	rospy.init_node('controller')
+	r = rospy.Rate(0.5)
 
 thrust = 1
 lift = 0
 
 motors = drone.Motors()
 
-motors.motor_DL = (int)(1000 + 1000 * lift)
-motors.motor_DR = motors.motor_DL
+#motors.motor_DL = (int)(1000 + 1000 * lift)
+#motors.motor_DR = motors.motor_DL
+#motors.motor_L = (int)(1000 + thrust * 500)
+#motors.motor_R = (int)(1000 + thrust * 500)
 
-motors.motor_L = (int)(1000 + thrust * 500)
-motors.motor_R = (int)(1000 + thrust * 500)
+motors.motor_DL = 1000
+motors.motor_DR = 1000
+motors.motor_L = 1000
+motors.motor_R = 1000
 
+counter = 0
 
+'''
 def controll_callback(event):
     print 'Timer called at ' + str(event.current_real)
 	data = motors.SerializeToString()
 	sent = ground.sendto(data, hover_address)
+'''
 
 def controller():
-	rospy.Timer(rospy.Duration(2), controll_callback)
+	#rospy.Timer(rospy.Duration(2), controll_callback)
+	while not rospy.is_shutdown():
+		if (counter % 2 == 0):
+			motors.motor_R = 2000
+			motors.motor_L = 1000
+		else:
+			motors.motor_L = 2000
+			motors.motor_R = 1000
+		r.sleep()
 
 
 if __name__ == "__main__":
-	setup()
+	ground, hover_address = setupUDP()
+	setupNode()
 	contoller()
 
 
