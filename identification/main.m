@@ -1,4 +1,4 @@
-%% Hovercraft parameter identification
+%% Hovercraft parameter identification - Simulation
 %  main program for fitting parameters of ODE hovercraft model to data
 %  objective function is defined in objFun.m
 %  dynamic model is defined in dynamicsId.m
@@ -21,23 +21,16 @@ Nr = 0.5E-2;    % Yaw damping
 
 K = 0.1;          % Motor signal to thrust conversion coefficient
 
+
+%% Identification
+
 % Initial parameter guess
 theta0 = [K, Iz, Xu, Yv, Nr] + 0.3*rand;
 
 % Add some noise to identification data
 dataId.nu = dataId.nu + 0.1*(0.5-rand(size(dataId.nu)));
 
-%% Minimization procedure
-
-obj =@(theta) objFun(theta, dataId);    % Objective function for minimization
-lb = zeros(1,5);                        % Lower bound on parameters
-ub = 5*ones(1,5);                       % Upper bound on parameters
-opt = optimoptions('fmincon', 'Algorithm','sqp', 'Display', 'iter');    % Optimization settings
-
-% Minimization
-tic
-[thetamin, objmin, exitflag, output] = fmincon(obj,theta0,[],[],[],[],lb,ub,[], opt);
-toc
+[thetamin, objmin] = paramId(dataId, theta0)
 
 disp('Real parameters theta:');
 disp([K, Iz, Xu, Yv, Nr]);
