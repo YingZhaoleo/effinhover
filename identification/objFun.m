@@ -10,8 +10,6 @@ function S = objFun(theta, data)
 %               dataId.nu   : state (u,v,r) 
 %               dataId.U    : input (u1, u2)
 %               dataId.h    : sampling time
-%               dataId.tmax : simulation / experiment duration
-%               dataId.nu0  : initial state
 %
 % Output:
 %   S : Value of objective function for current parameters theta
@@ -26,20 +24,21 @@ Nr = theta(5);
 
 % Simulation setup
 h = data.h;           % sampling time
-tmax = data.tmax;     % simulation time   
+tmax = data.t_nu(end);     % simulation time   
 t = 0:h:tmax;         % simulation time 
-nu0 = data.nu0;       % initial condition
+nu0 = data.nu(:,1);       % initial condition
 
 % Upsampling input signal for simulation with nearest interpolation
-Ures = interp1(data.t, data.U', t, 'previous');
+Ures = interp1(data.t_U, data.U', t, 'previous', 'extrap');
 
 data.U = Ures';
+
 % Wrap dynamicsId function into function that can be used by RK4
 dynamics =@(nu, U) dynamicsId(nu, U, m, Iz, Xu, Yv, Nr, K);
 
 % Simulate system with current parameter using Euler forward
 % Euler discrete system = Euler function with function handle (@dynamicsId) of dynamics function
-sim.f_discrete = @(nu,U) EM(nu, U, h, dynamics);
+sim.f_discrete = @(nu,U) RK4(nu, U, h, dynamics);
 sim.nu = nu0;
 for k = 1:length(t) - 1
     sim.nu(:,k+1) = sim.f_discrete(sim.nu(:,k), data.U(:,k));
@@ -47,7 +46,8 @@ end
 
 % Compute predicted states at each (measured) sampling time by
 % interpolating the simulation results at the measured sampling times
-nuPred = interp1(t, sim.nu', data.t, 'nearest');
+nuPred = interp1(t, sim.nu', data.t_nu, 'nearest', 'extrap');
+
 
 % Compute sum of squared difference between model and identification data
 S = sum(sum( (nuPred' - data.nu).^2));
