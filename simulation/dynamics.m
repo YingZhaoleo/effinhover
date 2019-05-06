@@ -24,7 +24,7 @@ Nr = 0.5E-2;    % Yaw damping
 
 K = 1;          % Motor signal to thrust conversion coefficient
 
-l = 0.025;      % Lateral offset of thruster from center line
+l = 0.0325;      % Lateral offset of thruster from center line
 
 % Time dependent input (used in previous version)
 %     if t < 1
