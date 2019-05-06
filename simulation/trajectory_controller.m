@@ -23,11 +23,11 @@ function u = trajectory_controller( eta, nu, nu_d, pd, pd_d, pd_dd, pd_ddd, ke, 
 
 
 % parameters of the hovercraft
-m = 0.59;       % mass
-Iz = 0.106;     % moment of inertia around z axis
+m = 0.0583;       % mass
+Iz = 0.00013;     % moment of inertia around z axis
 
-dv = 0.3;       % linear damping
-dr = 0.5E-2;    % rotational damping
+dv = 0.05;       % linear damping
+dr = 0.00001;    % rotational damping
 
 Dv = diag([dv, dv]);
 Rpsi = [cos(eta(3)), -sin(eta(3)); sin(eta(3)), cos(eta(3))];

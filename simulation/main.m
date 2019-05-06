@@ -10,7 +10,7 @@ tmax = 20;          % Simulation time
 t = 0:h:tmax;       % Sample times
 
 %% desired trajectory
-switch (4)
+switch (2)
     case 1
         % circle
         R = 1;  % radius of circle
@@ -44,19 +44,19 @@ end
 % set some of the temporal derivatives of trajectory to zero
 %pd_d = zeros(size(pd));
 %pd_dd = zeros(size(pd));
-pd_ddd = zeros(size(pd));
+%pd_ddd = zeros(size(pd));
 
 %% controller parameters
-ke = 4;                     % convergence rate to the trajectory?
-kphi = 0.1 * eye(2);        % seems to influence rotation rate a lot
-kz = 4;
-delta = [0.1; 0.1]; 
+ke = 0.005;                     % convergence rate to the trajectory?
+kphi = 0.05 * eye(2);        % seems to influence rotation rate a lot
+kz = 0.005;
+delta = 0.03*[0.1; 0.1]; 
 % no idea what the fuck delta does but it cannot be neither 
 % too small nor too big -> hovercraft starts rotating
 
 % max possible input to system
-u1_max = 8;
-u2_max = 8;
+u1_max = 0.16;
+u2_max = 10 * 0.16 * 0.0325;    % this should be even lower?
 
 U = [0; 0];                 % initial controller input
 

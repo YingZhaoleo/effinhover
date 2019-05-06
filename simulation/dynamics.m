@@ -15,12 +15,12 @@ nu = X(4:6);    % Linear and angular velocity in body frame
 % Parameter setup
 % This part can be modularized later -> make setup function
 
-m = 0.59;       % Mass of hovercraft
-Iz = 0.106;     % Moment of inertia around z axis
+m = 0.0583;       % Mass of hovercraft
+Iz = 0.00013;     % Moment of inertia around z axis
 
-Xu = 0.3;       % Surge damping
-Yv = 0.3;      % Sway damping
-Nr = 0.5E-2;    % Yaw damping
+Xu = 0.05;       % Surge damping
+Yv = 0.05;      % Sway damping
+Nr = 0.00001;    % Yaw damping
 
 K = 1;          % Motor signal to thrust conversion coefficient
 
