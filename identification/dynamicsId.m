@@ -24,7 +24,7 @@ function dnudt = dynamicsId(nu, U, m, Iz, Xu, Yv, Nr, K)
 % Nr = 0.5E-2;    % Yaw damping
 % K = 2;
 
-l = 0.025;      % Lateral offset of thruster from center line  
+l = 0.0325;      % Lateral offset of thruster from center line  
 
 % Assumed origin of body frame is at center of gravity
 

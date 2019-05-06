@@ -15,7 +15,7 @@ function S = objFun(theta, data)
 %   S : Value of objective function for current parameters theta
 
 % Assign parameters
-m = 0.59;
+m = 0.058;
 K = theta(1);
 Iz = theta(2);
 Xu = theta(3);
@@ -50,6 +50,6 @@ nuPred = interp1(t, sim.nu', data.t_nu, 'nearest', 'extrap');
 
 
 % Compute sum of squared difference between model and identification data
-S = sum(sum( (nuPred' - data.nu).^2));
+S = sum(sum( (nuPred' - data.nu).^2))/length(data.t_nu);
 
 end
