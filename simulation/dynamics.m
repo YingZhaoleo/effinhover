@@ -19,10 +19,10 @@ m = 0.59;       % Mass of hovercraft
 Iz = 0.106;     % Moment of inertia around z axis
 
 Xu = 0.3;       % Surge damping
-Yv = 0.35;      % Sway damping
+Yv = 0.3;      % Sway damping
 Nr = 0.5E-2;    % Yaw damping
 
-K = 0.1;          % Motor signal to thrust conversion coefficient
+K = 1;          % Motor signal to thrust conversion coefficient
 
 l = 0.025;      % Lateral offset of thruster from center line
 
@@ -55,6 +55,10 @@ D = diag([Xu, Yv, Nr]);
 B = [1, 1;
      0, 0;
      l, -l];
+ 
+B = [1, 0;
+     0, 0;
+     0, 1];
 
 % Rotation matrix from body to ground frame
 R_z_psi = [cos(eta(3)), -sin(eta(3)), 0;

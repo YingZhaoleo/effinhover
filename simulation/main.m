@@ -2,73 +2,117 @@
 %  Based on surface ship model by Thor I. Fossen, Guidance and Control of Ocean Vehicles
 
 clear 
-%close all
+close all
 
-% Simulation settings
+%% simulation settings
 h = 0.005;            % Sample time
-tmax = 30;          % Simulation time   
+tmax = 20;          % Simulation time   
 t = 0:h:tmax;       % Sample times
 
-% Initial state vector
-X0 = [0, 0, 0, 0, 0, 0]';
+%% desired trajectory
+switch (2)
+    case 1
+        % circle
+        R = 3;  % radius of circle
+        pd = R * [cos(2*pi*0.1*t); sin(2*pi*0.1*t)];
+        pd_d = R*2*pi*0.1 * [-sin(2*pi*0.1*t); cos(2*pi*0.1*t)];
+        pd_dd = R*(2*pi*0.1)^2 * [cos(2*pi*0.1*t); sin(2*pi*0.1*t)];
+        pd_ddd = R*(2*pi*0.1)^3 * [-sin(2*pi*0.1*t); cos(2*pi*0.1*t)];
+    case 2
+        % cosine
+        pd = [cos(2*pi*0.05*t); t/3];
+        pd_d = [-2*pi*0.05*sin(2*pi*0.05*t); ones(size(t))/3];
+        pd_dd = [(2*pi*0.05)^2 * cos(2*pi*0.05*t); zeros(size(t))];
+        pd_ddd = [-(2*pi*0.05)^3 * sin(2*pi*0.05*t); zeros(size(t))];    
+    case 3
+        % parabola
+        pd = [t/4; t.*t/20];
+        pd_d = [ones(size(t))/4; t/10];
+        pd_dd = [zeros(size(t)); ones(size(t))/10];
+        pd_ddd = zeros(size(pd));
+    case 4
+        % rose curve
+        k = 3/2;
+        pd = [cos(k*t).*cos(t); cos(k*t).*sin(t)];
+        pd_d = [-k*sin(k*t).*cos(t) - cos(k*t).*sin(t); -k*sin(k*t).*sin(t) + cos(k*t).*cos(t)];
+        pd_dd = diff(pd_d,1,2)./h;
+        pd_dd1 = [pd_dd, [0;0]];
+        pd_dd = [ 2*k*sin(t).*sin(k*t) - (k^2 + 1)*cos(t).*cos(k*t); ...
+                 -(k^2 + 1)*sin(t).*cos(k*t) - 2*k*cos(t).*sin(k*t)];
+end
 
-% Input vector
-U = 2*max(idinput([length(t), 2], 'prbs')', 0) + [0.2; 0]*ones(1, length(t));
-n = round(length(t)/2);
-U = U + 10*[0.2 * ones(1, n-1), zeros(1, n); zeros(1, n-1), 0.2 * ones(1, n)];
+% set some of the temporal derivatives of trajectory to zero
+%pd_d = zeros(size(pd));
+%pd_dd = zeros(size(pd));
+pd_ddd = zeros(size(pd));
 
-% Simulate trajectory using ode45 (does not work with the current
-% implementation of the dynamic function)
-%[T1, X1] = ode45(@(t, y) dynamics(t, y), tspan, X0);
-%[T2, X2] = ode23(@(t, y) dynamics(t, y), tspan, X0);
+%% controller parameters
+ke = 4;                     % convergence rate to the trajectory?
+kphi = 0.1 * eye(2);        % seems to influence rotation rate a lot
+kz = 4;
 
-% Simulate using RK4
+% no idea what the fuck delta does but it cannot be neither 
+% too small nor too big -> hovercraft starts rotating
+delta = [0.1; 0.1]; 
+
+U = [0; 0];                 % initial controller input
+
+%% simulate system using RK4
+
+% initial state vector
+
+X0 = zeros(6, 1);
+X0(1:2) = pd(:, 1);     % set hovercraft at start of trajectory
+
 rk4.name = 'RK4';
 % RK4 discrete system = RK4 function with function handle (@dynamics) of dynamics function
 rk4.f_discrete = @(X,U) RK4(X, U, h, @dynamics);
 rk4.X = X0;
-tic
+rk4.U = U;
+
 for k = 1:length(t) - 1
-  rk4.X(:,k+1) = rk4.f_discrete(rk4.X(:,k), U(:,k));
+    X_d = dynamics(rk4.X(:,k), U, 0);       % calculate accelerations (for nu_d)
+    
+    % frequency of controller is slower than simulation
+    % only recalculate control input every nth iteration
+    if (mod(k,1) == 0)
+        U = trajectory_controller( rk4.X(1:3,k), rk4.X(4:6,k), X_d(4:6), ...
+                                   pd(:,k), pd_d(:,k), pd_dd(:,k), pd_ddd(:,k), ...
+                                   ke, kphi, kz, delta);
+    end
+    rk4.U(:, k) = U;
+    rk4.X(:,k+1) = rk4.f_discrete(rk4.X(:,k), U);
 end
-toc
-
-% Simulate using Euler -> write Euler(X, U, h, f) function similar to RK4
-euler.name = 'RK4';
-euler.f_discrete = @(X,U) EM(X, U, h, @dynamics);
-euler.X = X0;
-tic
-for k = 1:length(t) - 1
-  euler.X(:,k+1) = euler.f_discrete(euler.X(:,k), U(:,k));
-end
-toc
 
 
-%visualize(t, rk4.X, 20)
-%visualize(t, euler.X, 100)
+% visualize results
+visualize(t, rk4.X, 20)
 
-dataId.name = 'Identification data';
-dataId.t = t(1:5:end);
-dataId.nu = rk4.X(4:6, 1:5:end);
-dataId.U = U(:,1:5:end);
-dataId.h = h;
-dataId.tmax = tmax;
-dataId.nu0 = X0(4:6);
-save('../identification/dataID.mat', 'dataId')
-
-%[Ures, Ty] = resample(dataId.U', dataId.t, 1/h, 'nearest');
-Uq = interp1(dataId.t, dataId.U', t, 'previous');
+% actual and reference trajectory
+figure
+hold on
+plot(rk4.X(1, :), rk4.X(2, :), 'b')
+plot(pd(1,:), pd(2,:), 'r')
+set(gca, 'YDir','reverse')      % Flip direction of y-axis to match coordinate system
+axis equal
+legend('actual trajectory','reference trajectory')
 
 figure
-stairs(t, U(1,:), '-.k')
-hold on
-stairs(dataId.t, dataId.U(1,:), 'v-b', 'LineWidt', 1)
-stairs(t, Uq(:,1)', '*--r', 'LineWidt', 1)
+subplot(2,1,1)
+plot(t(1:end-1), rk4.U(1,:))
+ylabel('u_1 [N]')
+xlabel('time [s]')
+subplot(2,1,2)
+plot(t(1:end-1), rk4.U(2,:))
+ylabel('u_2 [Nm]')
+xlabel('time [s]')
 
-
-%figure
-% hold on
-% plot(X1(:,1), X1(:,2), 'b')
-% plot(X2(:,1), X2(:,2), 'k--')
-% plot(X(1,:), X(2,:), 'r--')
-% legend('ode45','ode23','rk4')
+% % for identification tests
+% dataId.name = 'Identification data';
+% dataId.t = t(1:5:end);
+% dataId.nu = rk4.X(4:6, 1:5:end);
+% dataId.U = U(:,1:5:end);
+% dataId.h = h;
+% dataId.tmax = tmax;
+% dataId.nu0 = X0(4:6);
+% save('../identification/dataID.mat', 'dataId')
