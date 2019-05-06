@@ -10,10 +10,10 @@ tmax = 20;          % Simulation time
 t = 0:h:tmax;       % Sample times
 
 %% desired trajectory
-switch (2)
+switch (4)
     case 1
         % circle
-        R = 3;  % radius of circle
+        R = 1;  % radius of circle
         pd = R * [cos(2*pi*0.1*t); sin(2*pi*0.1*t)];
         pd_d = R*2*pi*0.1 * [-sin(2*pi*0.1*t); cos(2*pi*0.1*t)];
         pd_dd = R*(2*pi*0.1)^2 * [cos(2*pi*0.1*t); sin(2*pi*0.1*t)];
@@ -50,10 +50,13 @@ pd_ddd = zeros(size(pd));
 ke = 4;                     % convergence rate to the trajectory?
 kphi = 0.1 * eye(2);        % seems to influence rotation rate a lot
 kz = 4;
-
+delta = [0.1; 0.1]; 
 % no idea what the fuck delta does but it cannot be neither 
 % too small nor too big -> hovercraft starts rotating
-delta = [0.1; 0.1]; 
+
+% max possible input to system
+u1_max = 8;
+u2_max = 8;
 
 U = [0; 0];                 % initial controller input
 
@@ -63,6 +66,7 @@ U = [0; 0];                 % initial controller input
 
 X0 = zeros(6, 1);
 X0(1:2) = pd(:, 1);     % set hovercraft at start of trajectory
+X0(4:5) = pd_d(:, 1);
 
 rk4.name = 'RK4';
 % RK4 discrete system = RK4 function with function handle (@dynamics) of dynamics function
@@ -79,7 +83,11 @@ for k = 1:length(t) - 1
         U = trajectory_controller( rk4.X(1:3,k), rk4.X(4:6,k), X_d(4:6), ...
                                    pd(:,k), pd_d(:,k), pd_dd(:,k), pd_ddd(:,k), ...
                                    ke, kphi, kz, delta);
+        % saturation
+        U(1) = min(max(U(1), 0), u1_max);   % cannot go backwards 
+        U(2) = min(max(U(2), -u2_max), u2_max); 
     end
+    
     rk4.U(:, k) = U;
     rk4.X(:,k+1) = rk4.f_discrete(rk4.X(:,k), U);
 end
