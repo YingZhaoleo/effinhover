@@ -22,7 +22,7 @@ Xu = 0.05;       % Surge damping
 Yv = 0.05;      % Sway damping
 Nr = 0.00001;    % Yaw damping
 
-K = 1;          % Motor signal to thrust conversion coefficient
+K = 0.08;          % Motor signal to thrust conversion coefficient
 
 l = 0.0325;      % Lateral offset of thruster from center line
 
@@ -52,13 +52,13 @@ C = [0, 0, - m * nu(2);
 D = diag([Xu, Yv, Nr]);
 
 % Input matrix
-B = [1, 1;
+B = K * [1, 1;
      0, 0;
      l, -l];
  
-B = [1, 0;
-     0, 0;
-     0, 1];
+%B = [1, 0;
+%     0, 0;
+%     0, 1];
 
 % Rotation matrix from body to ground frame
 R_z_psi = [cos(eta(3)), -sin(eta(3)), 0;
@@ -70,6 +70,6 @@ dXdt = zeros(6, 1);
 % Temporal derivative of x, y, psi
 dXdt(1:3) = R_z_psi * nu;
 % Temporal derivative of u, v, r
-dXdt(4:6) = M\(B * K * U - C * nu - D * nu);
+dXdt(4:6) = M\(B * U - C * nu - D * nu);
 
 end

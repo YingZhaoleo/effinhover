@@ -6,18 +6,18 @@ close all
 
 %% simulation settings
 h = 0.005;            % Sample time
-tmax = 20;          % Simulation time   
+tmax = 10;          % Simulation time   
 t = 0:h:tmax;       % Sample times
 
 %% desired trajectory
-switch (2)
+switch (5)
     case 1
         % circle
-        R = 1;  % radius of circle
+        R = 2;  % radius of circle
         pd = R * [cos(2*pi*0.1*t); sin(2*pi*0.1*t)];
         pd_d = R*2*pi*0.1 * [-sin(2*pi*0.1*t); cos(2*pi*0.1*t)];
-        pd_dd = R*(2*pi*0.1)^2 * [cos(2*pi*0.1*t); sin(2*pi*0.1*t)];
-        pd_ddd = R*(2*pi*0.1)^3 * [-sin(2*pi*0.1*t); cos(2*pi*0.1*t)];
+        pd_dd = R*(2*pi*0.1)^2 * [-cos(2*pi*0.1*t); -sin(2*pi*0.1*t)];
+        pd_ddd = R*(2*pi*0.1)^3 * [sin(2*pi*0.1*t); -cos(2*pi*0.1*t)];
     case 2
         % cosine
         pd = [cos(2*pi*0.05*t); t/3];
@@ -39,6 +39,14 @@ switch (2)
         pd_dd1 = [pd_dd, [0;0]];
         pd_dd = [ 2*k*sin(t).*sin(k*t) - (k^2 + 1)*cos(t).*cos(k*t); ...
                  -(k^2 + 1)*sin(t).*cos(k*t) - 2*k*cos(t).*sin(k*t)];
+    case 5
+        % straight line
+        p0 = [-2; -2];
+        p1 = [3; 2];
+        pd = p0.*(1 - t/10) + p1.*t/10;
+        pd_d = ones(size(pd)).*(p1 - p0)/10;
+        pd_dd = zeros(size(pd));
+        pd_ddd = zeros(size(pd));
 end
 
 % set some of the temporal derivatives of trajectory to zero
@@ -48,9 +56,9 @@ end
 
 %% controller parameters
 ke = 0.005;                     % convergence rate to the trajectory?
-kphi = 0.05 * eye(2);        % seems to influence rotation rate a lot
-kz = 0.005;
-delta = 0.03*[0.1; 0.1]; 
+kphi = 0.5 * eye(2);        % seems to influence rotation rate a lot
+kz = 0.00005;
+delta = 0.1*[0.1; 0.1]; 
 % no idea what the fuck delta does but it cannot be neither 
 % too small nor too big -> hovercraft starts rotating
 
@@ -65,8 +73,9 @@ U = [0; 0];                 % initial controller input
 % initial state vector
 
 X0 = zeros(6, 1);
-X0(1:2) = pd(:, 1);     % set hovercraft at start of trajectory
-X0(4:5) = pd_d(:, 1);
+X0(1:2) = [-3, -1]
+%X0(1:2) = pd(:, 1);     % set hovercraft at start of trajectory
+%X0(4:5) = pd_d(:, 1);
 
 rk4.name = 'RK4';
 % RK4 discrete system = RK4 function with function handle (@dynamics) of dynamics function
@@ -76,25 +85,29 @@ rk4.U = U;
 
 for k = 1:length(t) - 1
     X_d = dynamics(rk4.X(:,k), U, 0);       % calculate accelerations (for nu_d)
-    
+    X_d = X_d * 0;
     % frequency of controller is slower than simulation
     % only recalculate control input every nth iteration
-    if (mod(k,1) == 0)
+    if (mod(k,5) == 0)
         U = trajectory_controller( rk4.X(1:3,k), rk4.X(4:6,k), X_d(4:6), ...
                                    pd(:,k), pd_d(:,k), pd_dd(:,k), pd_ddd(:,k), ...
                                    ke, kphi, kz, delta);
         % saturation
-        U(1) = min(max(U(1), 0), u1_max);   % cannot go backwards 
-        U(2) = min(max(U(2), -u2_max), u2_max); 
+        %U(1) = min(max(U(1), 0), u1_max);   % cannot go backwards 
+        %U(2) = min(max(U(2), -u2_max), u2_max); 
     end
-    
+    Uactual(1,:) = 0.5 * (U(1) + U(2)/0.0325) / 0.08;
+    Uactual(2,:) = 0.5 * (U(1) - U(2)/0.0325) / 0.08;
+    Uactual(1) = min(max(Uactual(1), 0), 1);
+    Uactual(2) = min(max(Uactual(2), 0), 1);
+    %Uactual = U;
     rk4.U(:, k) = U;
-    rk4.X(:,k+1) = rk4.f_discrete(rk4.X(:,k), U);
+    rk4.X(:,k+1) = rk4.f_discrete(rk4.X(:,k), Uactual);
 end
 
 
 % visualize results
-visualize(t, rk4.X, 20)
+visualize(t, rk4.X, 10)
 
 % actual and reference trajectory
 figure
