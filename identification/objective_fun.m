@@ -1,4 +1,4 @@
-function S = objFun(theta, data)
+function S = objective_fun(theta, data)
 % OBJFUN objective function of parameter estimation 
 % S = sum of squared differences between model and identification data
 %
@@ -16,11 +16,11 @@ function S = objFun(theta, data)
 
 % Assign parameters
 m = 0.058;
+l = 0.0325;
 K = theta(1);
 Iz = theta(2);
 Xu = theta(3);
-Yv = theta(4);
-Nr = theta(5);
+Nr = theta(4);
 
 % Simulation setup
 h = data.h;           % sampling time
@@ -34,7 +34,7 @@ Ures = interp1(data.t_U, data.U', t, 'previous', 'extrap');
 data.U = Ures';
 
 % Wrap dynamicsId function into function that can be used by RK4
-dynamics =@(nu, U) dynamicsId(nu, U, m, Iz, Xu, Yv, Nr, K);
+dynamics =@(nu, U) dynamics_reduced(nu, U, [m, Iz, Xu, Nr, K, l]);
 
 % Simulate system with current parameter using Euler forward
 % Euler discrete system = Euler function with function handle (@dynamicsId) of dynamics function
@@ -50,6 +50,8 @@ nuPred = interp1(t, sim.nu', data.t_nu, 'nearest', 'extrap');
 
 
 % Compute sum of squared difference between model and identification data
-S = sum(sum( (nuPred' - data.nu).^2))/length(data.t_nu);
+%S = sum(sum( (nuPred' - data.nu).^2 ))/length(data.t_nu);
+
+S = sum(vecnorm(nuPred' - data.nu, 2, 2))/length(data.t_nu);
 
 end
