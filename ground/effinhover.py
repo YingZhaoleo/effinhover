@@ -8,8 +8,6 @@ import time
 
 import drone_pb2 as drone
 
-import pygame
-
 
 class Periodic_Delay:
 	def __init__(self, period, show_period=None, name=None):
@@ -165,6 +163,18 @@ class Controller(object):
 			self.motors.motor_L = self.motors.motor_L + (int)(500 * u)
 		else:
 			self.motors.motor_R = self.motors.motor_L - (int)(500 * u)
+
+		#################################################################
+		# motor thrust test
+		# manually hardcode input signals
+		
+		self.motors.motor_L = 1000
+		self.motors.motor_R = 1000
+		self.motors.motor_DL = 2000
+		self.motors.motor_DR = 2000
+
+		#################################################################
+
 
 	def _send_motors(self):
 		self.linkCommand.send(self.motors.SerializeToString())
