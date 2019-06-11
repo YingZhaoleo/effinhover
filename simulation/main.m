@@ -9,8 +9,18 @@ h = 0.005;            % Sample time
 tmax = 10;          % Simulation time   
 t = 0:h:tmax;       % Sample times
 
+%% hovercraft parameters
+m = 0.0583;       % mass of hovercraft
+Iz = 0.00013;     % moment of inertia around z axis
+Xu = 0.05;        % linear damping
+Nr = 0.00001;     % yaw damping
+motor_coeff = 0.08;         % motor signal to thrust conversion coefficient
+l = 0.0325;       % lateral offset of thruster from center line
+
+param = [m, Iz, Xu, Nr, motor_coeff, l];
+
 %% desired trajectory
-switch (5)
+switch (1)
     case 1
         % circle
         R = 2;  % radius of circle
@@ -59,8 +69,6 @@ ke = 0.005;                     % convergence rate to the trajectory?
 kphi = 0.5 * eye(2);        % seems to influence rotation rate a lot
 kz = 0.00005;
 delta = 0.1*[0.1; 0.1]; 
-% no idea what the fuck delta does but it cannot be neither 
-% too small nor too big -> hovercraft starts rotating
 
 % max possible input to system
 u1_max = 0.16;
@@ -79,12 +87,12 @@ X0(1:2) = [-3, -1]
 
 rk4.name = 'RK4';
 % RK4 discrete system = RK4 function with function handle (@dynamics) of dynamics function
-rk4.f_discrete = @(X,U) RK4(X, U, h, @dynamics);
+rk4.f_discrete = @(X,U) RK4(X, U, h, @(X,U) dynamics(X,U,param));
 rk4.X = X0;
 rk4.U = U;
 
 for k = 1:length(t) - 1
-    X_d = dynamics(rk4.X(:,k), U, 0);       % calculate accelerations (for nu_d)
+    X_d = dynamics(rk4.X(:,k), U, param);       % calculate accelerations (for nu_d)
     X_d = X_d * 0;
     % frequency of controller is slower than simulation
     % only recalculate control input every nth iteration
