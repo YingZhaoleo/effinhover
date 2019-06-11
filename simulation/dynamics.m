@@ -1,57 +1,40 @@
-function dXdt = dynamics(X, U, t)
-% DYNAMICS calculates the function f(X,U,t) of the dynamic system
-% dX/dt = f(X,U,t)
+function dXdt = dynamics(X, U, param)
+% DYNAMICS Calculate the function f(X,U) of the dynamic system
+% dX/dt = f(X,U)
 %
 % Inputs:
 %   X : State (column) vector, X1 = x, X2 = y, X3 = psi, X4 = u, X5 = v, X6 = r
 %   U : Input (column) vector, U1 = u1 (left thruster), U2 = u2 (right thruster)
-%   t : time (optional)
+%   param : Parameters of hovercraft (row vector)
 % Output:
 %   dXdt : Derivative of state vector
 
-eta = X(1:3);   % Position and orientation in ground frame
-nu = X(4:6);    % Linear and angular velocity in body frame
+eta = X(1:3);   % position and orientation in ground frame
+nu = X(4:6);    % linear and angular velocity in body frame
 
-% Parameter setup
-% This part can be modularized later -> make setup function
+% parameters of hovercraft
+m = param(1);      % mass of hovercraft
+Iz = param(2);     % moment of inertia around z axis
+Xu = param(3);     % surge damping
+Yv = Xu;           % sway damping
+Nr = param(4);     % yaw damping
+K = param(5);      % motor signal to thrust conversion coefficient
+l = param(6);      % lateral offset of thruster from center line
 
-m = 0.0583;       % Mass of hovercraft
-Iz = 0.00013;     % Moment of inertia around z axis
+% origin of body frame is assumed at center of gravity
 
-Xu = 0.05;       % Surge damping
-Yv = 0.05;      % Sway damping
-Nr = 0.00001;    % Yaw damping
+% inverse of mass matrix
+M_inv = diag([1/m, 1/m, 1/Iz]);
 
-K = 0.08;          % Motor signal to thrust conversion coefficient
-
-l = 0.0325;      % Lateral offset of thruster from center line
-
-% Time dependent input (used in previous version)
-%     if t < 1
-%         U = [0,0]';
-%     elseif (t > 1) && (t < 15)
-%         U = [0.2,0]';
-%     elseif (t > 15) && (t < 30)
-%         U = [0, 0.2]';
-%     else
-%         U = [0,0]';
-%     end
-
-% Origin of body frame is assumed at center of gravity
-
-% Mass matrix
-M = [m, 0, 0;
-     0, m, 0;
-     0, 0, Iz];
-% Coriolis matrix
+% coriolis matrix
 C = [0, 0, - m * nu(2);
      0, 0, m * nu(1);
      m * nu(2), - m * nu(1), 0];
 
-% Damping matrix
+% damping matrix
 D = diag([Xu, Yv, Nr]);
 
-% Input matrix
+% input matrix
 B = K * [1, 1;
      0, 0;
      l, -l];
@@ -60,16 +43,16 @@ B = K * [1, 1;
 %     0, 0;
 %     0, 1];
 
-% Rotation matrix from body to ground frame
+% rotation matrix from body to ground frame
 R_z_psi = [cos(eta(3)), -sin(eta(3)), 0;
            sin(eta(3)),  cos(eta(3)), 0;
                 0     ,       0     , 1];
 
 dXdt = zeros(6, 1);
 
-% Temporal derivative of x, y, psi
+% temporal derivative of x, y, psi
 dXdt(1:3) = R_z_psi * nu;
-% Temporal derivative of u, v, r
-dXdt(4:6) = M\(B * U - C * nu - D * nu);
+% temporal derivative of u, v, r
+dXdt(4:6) = M_inv * (B * U - C * nu - D * nu);
 
 end
