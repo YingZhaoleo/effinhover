@@ -11,8 +11,10 @@ close all
 addpath('../simulation');
 
 
+load('test_data_id.mat');
+
 % path to identification data
-data_id_path = 'identification_data/set01/';
+data_id_path = 'identification_data/set05/';
 
 eta_file = dir([data_id_path, 'eta*.csv']);
 nu_file = dir([data_id_path, 'nu*.csv']);
@@ -24,7 +26,7 @@ n_files = length(eta_file);
 theta_estim = zeros(n_files, 4);    % save parameters
 
 % load data for every run
-for n = 1:n_files
+for n = 1:1
     
     % import data as tables
     eta_read = readtable([data_id_path, eta_file(n).name]);
@@ -37,42 +39,42 @@ for n = 1:n_files
     nu = [nu_read.field_point_x, nu_read.field_point_y, nu_read.field_point_z]';
     ctrl = [ctrl_read.field_point_x, ctrl_read.field_point_y]';
     
-    %psi = pose.field_point_z';
-    %psi = unwrap(psi);                   % eliminate jumps and make psi continuous
-    %psi = medfilt1(psi, 10);             % eliminate spikes 
-    
-    %nu(2,:) = medfilt1(nu(2,:), 3, [], 2);   % filter nu to eliminate spikes
-
+    %psi = unwrap(psi);                   % eliminate jumps and make psi continuous  
+    %nu = medfilt1(nu, 5, [], 2);   % filter nu to eliminate spikes
    
-    % downsample measurements
-    %t_skip = 10;
-    %t_start = 5; % timedelay
-    %t_end = 500; %length(t_pose);
-    %t_pose = t_pose(t_start:t_skip:t_end);
-    %x = x(t_start:t_skip:t_end);
-    %y = y(t_start:t_skip:t_end);
-    %psi = psi(t_start:t_skip:t_end);
-        
-    %eta_file = [x; y; psi];
-
-    %visualize(t_eta, eta, 1);
-
+    % test for generated id data
+    %t_eta = data_id.t;
+    %eta = data_id.eta;
+    %nu = data_id.nu;
+    %ctrl = data_id.U;
     
-%     figure
-%     plot(nu')
-%     nu = medfilt1(nu, 3, [], 2);   % filter nu to eliminate spikes
-%     hold on
-%     plot(nu')
-%     
-    dataId.t_nu = t_eta;
-    dataId.nu = nu;
-    dataId.t_U = t_eta;
-    dataId.U = ctrl;
-    dataId.h = 0.005;
+    data.t_nu = t_eta;
+    data.nu = nu;
+    data.t_U = t_eta;
+    data.U = ctrl;
+    data.h = 0.005;
     
-    theta0 = [0.8, 0.016, 0.05, 0.005];
     
-    [thetamin, objmin] = param_id(dataId, theta0)
+    % testing velocity calculation
+    vel_world = diff(eta, 1, 2)./diff(t_eta);
+    
+    % calculate velocities (u, v, r) in body frame
+    nu_new = zeros(size(vel_world));
+    for k = 1:(length(t_eta) - 1) 
+        R_z_psi_T = [cos(eta(3, k)), sin(eta(3, k)), 0;
+                   -sin(eta(3, k)),  cos(eta(3, k)), 0;
+                         0     ,       0     , 1];
+        nu_new(:,k) = R_z_psi_T * vel_world(:, k);          
+    end
+    
+    
+    
+    
+    
+    % Iz, Xu, Nr, k
+    theta0 = [0.0013, 0.05, 0.0005, 0.08];
+    
+    [thetamin, objmin] = param_id(data, theta0)
     theta_estim(n, :) = thetamin;
     
     
@@ -102,14 +104,11 @@ for n = 1:n_files
           sim.X(:,k+1) = sim.f_discrete(sim.X(:,k), Usim(:,k));
         end
 
-
         %visualize(t(:), sim.X(:,:), 1);
-
-
         figure
         hold on
         plot(sim.X(1,:), sim.X(2,:));
-        plot(eta(1,:), eta(2,:));
+        plot(eta(1,:), eta(2,:), '--');
         legend('sim', 'meas');
         set(gca, 'YDir','reverse')      % Flip direction of y-axis to match coordinate system
         axis equal
@@ -120,21 +119,21 @@ for n = 1:n_files
         subplot(3,1,1)
         hold on
         plot(t, sim.X(4,:));
-        plot(t_eta, nu(1,:));
+        plot(t_eta, nu(1,:), '--');
         legend('sim', 'meas');
         xlabel('t [s]')
         ylabel('u [m/s]')
         subplot(3,1,2)
         hold on
         plot(t, sim.X(5,:));
-        plot(t_eta, nu(2,:));
+        plot(t_eta, nu(2,:), '--');
         legend('sim', 'meas');
         xlabel('t [s]')
         ylabel('v [m/s]')
         subplot(3,1,3)
         hold on
         plot(t, sim.X(6,:));
-        plot(t_eta, nu(3,:));
+        plot(t_eta, nu(3,:), '--');
         legend('sim', 'meas');
         xlabel('t [s]')
         ylabel('r [rad/s]')

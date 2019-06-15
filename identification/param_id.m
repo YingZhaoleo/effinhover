@@ -1,4 +1,4 @@
-function [thetamin, objmin] = param_id(dataId, theta0)
+function [thetamin, objmin] = param_id(data, theta0)
 %PARAMID Identify parameters of ODE describing hovercraft dynamics
 %
 % Inputs:
@@ -16,17 +16,16 @@ function [thetamin, objmin] = param_id(dataId, theta0)
 %   objmin   : Minimal value of loss
 
 
-obj =@(theta) objective_fun(theta, dataId);    % Objective function for minimization
-lb = [-1000, 0, 0, 0];               % Lower bound on parameters
-ub = 5*ones(1,4);                       % Upper bound on parameters
-opt = optimoptions('fmincon', 'Algorithm','interior-point', 'Display', 'iter');    % Optimization settings
-%opt = optimoptions('fmincon', 'Algorithm','sqp', 'Display', 'iter');    % Optimization settings
+obj = @(theta) objective_fun(theta, data);    % objective function for minimization
+lb = [0, 0, 0, -1000];                  % lower bound on parameters
+ub = 10*ones(1,4);                       % upper bound on parameters
+%opt = optimoptions('fmincon', 'Algorithm','interior-point', 'Display', 'iter');    % optimization settings
+opt = optimoptions('fmincon', 'Algorithm','sqp', 'Display', 'iter');    % optimization settings
 
-% Minimization
+% minimization
 tic
 [thetamin, objmin, exitflag, output] = fmincon(obj,theta0,[],[],[],[],lb,ub,[], opt);
 toc
-
 
 end
 
