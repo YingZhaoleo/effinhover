@@ -1,4 +1,4 @@
-%% Generate identification data
+%% Generate artificial identification data
 
 clear 
 clc
@@ -7,10 +7,15 @@ close all
 % import functions from simulation folder
 addpath('../simulation');
 
+%% parameters of id data
+add_noise = true;      % add noise to simulated velocity vector
+noise_level = 0.1;      % amplitude of noise
+h_out = 0.1;            % sampling time of id data
+t_max = 10;             % time duration of id data  
+
 %% simulation settings
-h = 0.005;            % Sample time
-tmax = 20;          % Simulation time   
-t = 0:h:tmax;       % Sample times
+h = 0.005;          % simulation time step
+t = 0:h:t_max;       % simulation time vector
 
 %% hovercraft parameters
 m = 0.0583;       % mass of hovercraft
@@ -20,12 +25,12 @@ Nr = 0.0001;     % yaw damping
 motor_coeff = 0.08;         % motor signal to thrust conversion coefficient
 l = 0.0325;       % lateral offset of thruster from center line
 
-param = [m, Iz, Xu, Nr, motor_coeff, l];
+param = [m, Iz, Xu, Xu, Nr, motor_coeff, l];
 
 %% identification input
 
 u_fwd = 0.5;
-u_diff = 0.2 * idinput(length(t), 'prbs', [0, 0.05]);
+u_diff = 0.2 * idinput(length(t), 'prbs', [0, 10*h]);
 
 U = u_fwd + [u_diff, - u_diff]';
 
@@ -48,8 +53,7 @@ for k = 1:length(t) - 1
     sim.X(:,k+1) = sim.f_discrete(sim.X(:,k), U(:,k));
 end
 
-
-% visualize results
+%% visualize results
 %visualize(t, sim.X, 10)
 
 % trajectory
@@ -58,16 +62,18 @@ plot(sim.X(1, :), sim.X(2, :), 'b')
 set(gca, 'YDir','reverse')      % Flip direction of y-axis to match coordinate system
 axis equal
 
+%% save identification data
 
-% for identification tests
-step = 10;
-data_id.name = 'Identification data';
+nu = sim.X(4:6, :);
+if add_noise
+    nu = nu + noise_level * std(nu, [], 2).*randn(size(nu));
+end
+
+step = h_out/h;
+data_id.name = 'artificial identification data';
 data_id.true_param = [Iz, Xu, Nr, motor_coeff];
 data_id.t = t(1:step:end);
 data_id.eta = sim.X(1:3, 1:step:end);
-data_id.nu = sim.X(4:6, 1:step:end);
+data_id.nu = nu(:, 1:step:end);
 data_id.U = U(:,1:step:end);
-data_id.h = h;
-data_id.tmax = tmax;
-data_id.nu0 = X0(4:6);
 save('../identification/test_data_id.mat', 'data_id')
