@@ -17,7 +17,7 @@ Nr = 0.00001;     % yaw damping
 motor_coeff = 0.08;         % motor signal to thrust conversion coefficient
 l = 0.0325;       % lateral offset of thruster from center line
 
-param = [m, Iz, Xu, Nr, motor_coeff, l];
+param = [m, Iz, Xu, Xu, Nr, motor_coeff, l];
 
 %% desired trajectory
 switch (1)
@@ -100,9 +100,6 @@ for k = 1:length(t) - 1
         U = trajectory_controller( rk4.X(1:3,k), rk4.X(4:6,k), X_d(4:6), ...
                                    pd(:,k), pd_d(:,k), pd_dd(:,k), pd_ddd(:,k), ...
                                    ke, kphi, kz, delta);
-        % saturation
-        %U(1) = min(max(U(1), 0), u1_max);   % cannot go backwards 
-        %U(2) = min(max(U(2), -u2_max), u2_max); 
     end
     Uactual(1,:) = 0.5 * (U(1) + U(2)/0.0325) / 0.08;
     Uactual(2,:) = 0.5 * (U(1) - U(2)/0.0325) / 0.08;

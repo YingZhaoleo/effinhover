@@ -16,11 +16,11 @@ function S = objective_fun(theta, data)
 
 % assign parameters
 m = 0.058;
-m = 0.065;
 Iz = theta(1);
 Xu = theta(2);
-Nr = theta(3);
-K = theta(4);
+Yv = theta(3);
+Nr = theta(4);
+K = theta(5);
 l = 0.0325;
 
 % simulation setup
@@ -35,7 +35,7 @@ Ures = interp1(data.t_U, data.U', t, 'previous', 'extrap');
 data.U = Ures';
 
 % wrap dynamicsId function into function that can be used by RK4
-dynamics =@(nu, U) dynamics_reduced(nu, U, [m, Iz, Xu, Nr, K, l]);
+dynamics =@(nu, U) dynamics_reduced(nu, U, [m, Iz, Xu, Yv, Nr, K, l]);
 
 % simulate system with current parameter using Euler forward
 sim.f_discrete = @(nu,U) RK4(nu, U, h, dynamics);
@@ -50,8 +50,10 @@ nuPred = interp1(t, sim.nu', data.t_nu, 'nearest', 'extrap');
 
 
 % compute sum of squared difference between model and identification data
-weight = std(data.nu, [], 2);
+% weight components of nu with standard 1/ std
+weight = 1./std(data.nu, [], 2);
 S = sum(sum( weight.*(nuPred' - data.nu).^2 ))/length(data.t_nu);
+%S = sum( sum( (nuPred(:,3)' - data.nu(3,:)).^2 ))/length(data.t_nu);
 %S = sum(vecnorm(nuPred' - data.nu, 2, 2))/length(data.t_nu);
 
 end

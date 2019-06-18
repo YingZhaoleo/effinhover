@@ -17,8 +17,8 @@ function [thetamin, objmin] = param_id(data, theta0)
 
 
 obj = @(theta) objective_fun(theta, data);    % objective function for minimization
-lb = [0, 0, 0, -1000];                  % lower bound on parameters
-ub = 10*ones(1,4);                       % upper bound on parameters
+lb = [0, 0, 0, 0, -1000];                  % lower bound on parameters
+ub = 10*ones(1,5);                       % upper bound on parameters
 %opt = optimoptions('fmincon', 'Algorithm','interior-point', 'Display', 'iter');    % optimization settings
 opt = optimoptions('fmincon', 'Algorithm','sqp', 'Display', 'iter');    % optimization settings
 

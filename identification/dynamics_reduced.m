@@ -12,10 +12,10 @@ function dnudt = dynamics_reduced(nu, U, param)
 m = param(1);      % mass of hovercraft
 Iz = param(2);     % moment of inertia around z axis
 Xu = param(3);     % surge damping
-Yv = Xu;           % sway damping
-Nr = param(4);     % yaw damping
-K = param(5);      % motor signal to thrust conversion coefficient
-l = param(6);      % lateral offset of thruster from center line
+Yv = param(4);     % sway damping
+Nr = param(5);     % yaw damping
+K = param(6);      % motor signal to thrust conversion coefficient
+l = param(7);      % lateral offset of thruster from center line
 
 dnudt = zeros(3, 1);
 
