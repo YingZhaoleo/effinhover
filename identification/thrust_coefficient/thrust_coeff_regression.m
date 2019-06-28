@@ -27,6 +27,6 @@ legend('measurements left', 'measurements right', ...
        'regression left', 'regression right', ...
        'location', 'NW')
 xlabel('input $u_L$, $u_R$ [-]')
-ylabel('speed-to-thrust coefficient k [N]')
+ylabel('thrust coefficient k [N]')
 
 
