@@ -1,4 +1,4 @@
-function u = trajectory_controller( eta, nu, nu_d, pd, pd_d, pd_dd, pd_ddd, ke, kphi, kz, delta)
+function u = trajectory_controller( eta, nu, nu_d, pd, pd_d, pd_dd, pd_ddd, ke, kphi, kz, delta, h_param)
 %TRAJECTORY_CONTROLLER  position tracking control of underactuated hovercraft.
 %   Reference paper: "Position Tracking for a Nonlinear Underactuated Hovercraft: 
 %   Controller Design and Experimental Results" by Antonio Pedro Aguiar,
@@ -23,16 +23,16 @@ function u = trajectory_controller( eta, nu, nu_d, pd, pd_d, pd_dd, pd_ddd, ke, 
 
 
 % parameters of the hovercraft
-m = 0.0583;       % mass
-Iz = 0.00013;     % moment of inertia around z axis
+m = h_param(1);       % mass
+Iz = h_param(2);     % moment of inertia around z axis
 
-dv = 0.05;       % linear damping
-dr = 0.00001;    % rotational damping
+dv = h_param(3);       % linear damping
+dr = h_param(5);    % rotational damping
 
 Dv = diag([dv, dv]);
 Rpsi = [cos(eta(3)), -sin(eta(3)); sin(eta(3)), cos(eta(3))];
 Sr = nu(3) * [0, -1; 1, 0];
-B = [1, m * delta(2); 0, m * delta(1)];
+B = [1, m * delta(2); 0, -m * delta(1)];
 Bd = B(:,2);
 
 e = Rpsi'*(eta(1:2) - pd);
